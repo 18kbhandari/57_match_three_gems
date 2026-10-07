@@ -210,7 +210,15 @@ class Board:
             for c in range(GRID_SIZE):
                 if self.grid[r][c]: self.grid[r][c].update()
 
-    def render(self, surface):
+    def would_match_after_swap(self, pos1, pos2):
+        if not self.is_adjacent(pos1, pos2):
+            return False
+        self.grid[pos1[0]][pos1[1]], self.grid[pos2[0]][pos2[1]] = self.grid[pos2[0]][pos2[1]], self.grid[pos1[0]][pos1[1]]
+        has_match = bool(self.find_matches())
+        self.grid[pos1[0]][pos1[1]], self.grid[pos2[0]][pos2[1]] = self.grid[pos2[0]][pos2[1]], self.grid[pos1[0]][pos1[1]]
+        return has_match
+
+    def render(self, surface, hint_pair=None, hint_phase=0.0):
         board_rect = pygame.Rect(self.offset_x,self.offset_y,GRID_SIZE*TILE_SIZE,GRID_SIZE*TILE_SIZE)
         pygame.draw.rect(surface,(20,22,28),board_rect,border_radius=8)
         pygame.draw.rect(surface,(60,65,75),board_rect,width=3,border_radius=8)
@@ -224,6 +232,15 @@ class Board:
                     if gem.special:
                         pygame.draw.rect(surface,(255,255,255),tile.inflate(-10,-10),width=3,border_radius=8)
                         pygame.draw.circle(surface,(255,255,255),tile.center,7,2)
+                if hint_pair and (r,c) in hint_pair:
+                    pulse = int(2 + 3 * (0.5 + 0.5 * __import__("math").sin(hint_phase)))
+                    hint_rect = pygame.Rect(
+                        self.offset_x + c*TILE_SIZE + 4,
+                        self.offset_y + r*TILE_SIZE + 4,
+                        TILE_SIZE - 8,
+                        TILE_SIZE - 8,
+                    )
+                    pygame.draw.rect(surface, (255, 255, 255), hint_rect, width=pulse + 1, border_radius=12)
                 if self.selected == (r,c):
                     sel=pygame.Rect(self.offset_x+c*TILE_SIZE+2,self.offset_y+r*TILE_SIZE+2,TILE_SIZE-4,TILE_SIZE-4)
                     pygame.draw.rect(surface,(255,255,255),sel,width=4,border_radius=10)
